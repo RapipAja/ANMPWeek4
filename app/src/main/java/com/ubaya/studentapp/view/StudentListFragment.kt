@@ -31,11 +31,19 @@ class StudentListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this)[ListViewModel::class.java]
+        viewModel = ViewModelProvider(this).get(ListViewModel::class.java)
         viewModel.refresh()
 
         binding.recView.layoutManager = LinearLayoutManager(context)
         binding.recView.adapter = studentListAdapter
+
+        binding.refreshLayout.setOnRefreshListener {
+            viewModel.refresh()
+            binding.recView.visibility = View.GONE
+            binding.txtError.visibility = View.GONE
+            binding.progressLoad.visibility = View.VISIBLE
+            binding.refreshLayout.isRefreshing = false
+        }
 
         observeViewModel()
     }
@@ -45,14 +53,6 @@ class StudentListFragment : Fragment() {
             studentListAdapter.updateStudentList(it)
         })
 
-        viewModel.studentLoadErrorLD.observe(viewLifecycleOwner, Observer {
-            if(it == true) {
-                binding.txtError?.visibility = View.VISIBLE
-            } else {
-                binding.txtError?.visibility = View.GONE
-            }
-        })
-
         viewModel.loadingLD.observe(viewLifecycleOwner, Observer {
             if(it == true) {
                 binding.recView.visibility = View.GONE
@@ -60,6 +60,14 @@ class StudentListFragment : Fragment() {
             } else {
                 binding.recView.visibility = View.VISIBLE
                 binding.progressLoad.visibility = View.GONE
+            }
+        })
+
+        viewModel.studentLoadErrorLD.observe(viewLifecycleOwner, Observer {
+            if(it == true) {
+                binding.txtError?.visibility = View.VISIBLE
+            } else {
+                binding.txtError?.visibility = View.GONE
             }
         })
     }
